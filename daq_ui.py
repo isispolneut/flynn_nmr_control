@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PltDAQMonitor import PltDAQMonitor
+from QPlot import QPlot
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(711, 399)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.pulseOutput = PltDAQMonitor(self.centralwidget)
+        self.pulseOutput = QPlot(self.centralwidget)
         self.pulseOutput.setGeometry(QtCore.QRect(11, 11, 479, 181))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -90,7 +90,7 @@ class Ui_MainWindow(object):
         self.export_fid_button = QtWidgets.QPushButton(self.layoutWidget)
         self.export_fid_button.setObjectName("export_fid_button")
         self.gridLayout.addWidget(self.export_fid_button, 8, 0, 1, 2)
-        self.fidOutput = PltDAQMonitor(self.centralwidget,xlabel="Time / ms",ylabel="Signal / mV")
+        self.fidOutput = QPlot(self.centralwidget,xlabel="Time / ms",ylabel="Signal / mV")
         self.fidOutput.setGeometry(QtCore.QRect(10, 200, 481, 171))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)

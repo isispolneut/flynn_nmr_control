@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib import rcParams
 rcParams.update({'figure.autolayout': True})
 
-class PltDAQMonitor(FigureCanvas):
+class QPlot(FigureCanvas):
     """
     QtWidget that embeds matplotlib canvas.
     """
