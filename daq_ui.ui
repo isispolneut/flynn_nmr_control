@@ -29,9 +29,9 @@
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>85</red>
+          <red>255</red>
           <green>255</green>
-          <blue>0</blue>
+          <blue>255</blue>
          </color>
         </brush>
        </colorrole>
@@ -40,9 +40,9 @@
        <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>85</red>
+          <red>255</red>
           <green>255</green>
-          <blue>0</blue>
+          <blue>255</blue>
          </color>
         </brush>
        </colorrole>
@@ -77,10 +77,10 @@
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="4" column="0">
-        <widget class="QLabel" name="return_pulse_duration_label">
+       <item row="7" column="0" colspan="2">
+        <widget class="QPushButton" name="export_fid_button">
          <property name="text">
-          <string>Read Duration</string>
+          <string>Export FID</string>
          </property>
         </widget>
        </item>
@@ -137,7 +137,7 @@
        <item row="2" column="1">
         <widget class="QSpinBox" name="pulse_density_spin">
          <property name="suffix">
-          <string> per pulse</string>
+          <string> per period</string>
          </property>
          <property name="prefix">
           <string/>
@@ -205,17 +205,10 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="QPushButton" name="export_fid_button">
+       <item row="4" column="0">
+        <widget class="QLabel" name="return_pulse_duration_label">
          <property name="text">
-          <string>Export FID</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0" colspan="2">
-        <widget class="QPushButton" name="import_fid_button">
-         <property name="text">
-          <string>Import FID</string>
+          <string>Read Duration</string>
          </property>
         </widget>
        </item>
@@ -286,7 +279,7 @@
       <property name="title">
        <string>Fitting Bounds</string>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -552,9 +545,9 @@
       <property name="geometry">
        <rect>
         <x>650</x>
-        <y>390</y>
+        <y>408</y>
         <width>101</width>
-        <height>31</height>
+        <height>51</height>
        </rect>
       </property>
       <property name="text">
@@ -573,7 +566,7 @@
       <property name="title">
        <string>Fitted Parameters</string>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -641,6 +634,19 @@
         </item>
        </layout>
       </widget>
+     </widget>
+     <widget class="QPushButton" name="import_fid_button">
+      <property name="geometry">
+       <rect>
+        <x>650</x>
+        <y>340</y>
+        <width>101</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Import FID</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="series_acq_tab">
@@ -896,130 +902,245 @@
      <attribute name="title">
       <string>FID Series Fitting</string>
      </attribute>
-     <widget class="QWidget" name="fid_series_fitting_plot" native="true">
-      <property name="geometry">
-       <rect>
-        <x>210</x>
-        <y>10</y>
-        <width>541</width>
-        <height>431</height>
-       </rect>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="export_fid_series_button">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>450</y>
-        <width>191</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Export</string>
-      </property>
-     </widget>
      <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>191</width>
-        <height>77</height>
+        <width>751</width>
+        <height>461</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="1" column="0">
-        <widget class="QLabel" name="afid_sampling_period_label_2">
-         <property name="text">
-          <string>Sampling Period</string>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="series_fitting_group">
+         <property name="title">
+          <string>Series Fitting</string>
          </property>
+         <widget class="QWidget" name="fid_series_fitting_plot" native="true">
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>20</y>
+            <width>541</width>
+            <height>191</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>171</width>
+            <height>91</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="2" column="0" colspan="2">
+            <widget class="QPushButton" name="fit_fid_series_button">
+             <property name="text">
+              <string>Fit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="afid_sampling_period_label_2">
+             <property name="text">
+              <string>Sampling Period</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="afid_sampling_period_spin_2">
+             <property name="suffix">
+              <string> mins</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="afid_n_series_spin_2">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="afid_n_series_label_2">
+             <property name="text">
+              <string>N Series</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>8</x>
+            <y>160</y>
+            <width>171</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="0" column="0" colspan="3">
+            <widget class="QPushButton" name="export_fid_series_button">
+             <property name="text">
+              <string>Export</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="fid_directory_label_2">
+             <property name="text">
+              <string>Directory</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="fid_directory_display_2">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QToolButton" name="fid_directory_button_2">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <zorder>fid_series_fitting_plot</zorder>
+         <zorder>layoutWidget</zorder>
+         <zorder>fid_directory_button_2</zorder>
+         <zorder>fid_directory_label_2</zorder>
+         <zorder>fid_directory_display_2</zorder>
+         <zorder>export_fid_series_button</zorder>
+         <zorder>multiple_plotting_group</zorder>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QDoubleSpinBox" name="afid_sampling_period_spin_2">
-         <property name="suffix">
-          <string> mins</string>
+       <item>
+        <widget class="QGroupBox" name="multiple_plotting_group">
+         <property name="title">
+          <string>Multiple Plotting</string>
          </property>
-         <property name="decimals">
-          <number>0</number>
-         </property>
-         <property name="minimum">
-          <double>1.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>1.000000000000000</double>
-         </property>
-         <property name="value">
-          <double>1.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="afid_n_series_spin_2">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>1000</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="afid_n_series_label_2">
-         <property name="text">
-          <string>N Series</string>
-         </property>
+         <widget class="QWidget" name="fid_multiple_plot" native="true">
+          <property name="geometry">
+           <rect>
+            <x>190</x>
+            <y>20</y>
+            <width>541</width>
+            <height>201</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <zorder>multiple_plotting_group</zorder>
+         </widget>
+         <widget class="QWidget" name="layoutWidget_3">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>171</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="0" column="0">
+            <widget class="QLabel" name="multiple_fids_label">
+             <property name="text">
+              <string>FIDs</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="multiple_fids_input"/>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QPushButton" name="plot_multiple_fid_button">
+             <property name="text">
+              <string>Plot</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
      </widget>
+    </widget>
+    <widget class="QWidget" name="afp_tab">
+     <attribute name="title">
+      <string>AFP</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="pref_tab">
+     <attribute name="title">
+      <string>Preferences</string>
+     </attribute>
      <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
-        <x>460</x>
-        <y>450</y>
-        <width>297</width>
-        <height>25</height>
+        <x>10</x>
+        <y>10</y>
+        <width>241</width>
+        <height>61</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="fid_directory_label_2">
+      <layout class="QGridLayout" name="gridLayout_6">
+       <item row="0" column="1">
+        <widget class="QComboBox" name="output_terminal_combo"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="output_terminal_label">
          <property name="text">
-          <string>Directory</string>
+          <string>NMR Coil Output</string>
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLineEdit" name="fid_directory_display_2">
-         <property name="enabled">
-          <bool>false</bool>
+       <item row="1" column="0">
+        <widget class="QLabel" name="input_terminal_label">
+         <property name="text">
+          <string>NMR Coil Input</string>
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QToolButton" name="fid_directory_button_2">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="plot_fid_series_button">
-         <property name="text">
-          <string>Plot</string>
-         </property>
-        </widget>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="input_terminal_combo"/>
        </item>
       </layout>
      </widget>
