@@ -25,6 +25,16 @@ def butter_lowpass(data, cutoff, fs, order=5):
     y = lfilter(b,a,data)
     return y
 
+def afp_pulse_form(t,wl,wh,l):
+    # Outputs a Gaussian modulated sine wave whose
+    # frequency is linearly interpolated over the
+    # pulse period between wl and wh.
+    w = t*(np.abs(wh-wl)/(l)) + wl
+    mu = l/2
+    sigma = l/4
+    gauss = np.exp(-(t - mu)**2/(sigma**2))
+    return gauss*np.sin(2*np.pi*w*t)
+
 def exp_dec(t, vpp, decay_time, frequency, phase_diff, constant):
     return 0.5*vpp*np.exp(-(t/decay_time))*np.sin(2*np.pi*frequency*t+phase_diff)+constant
 
@@ -37,6 +47,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.acq_data = []
         self.fit_data = []
         self.series_amplitudes = []
+        self.fits = []
 
         self.i = 0
 
@@ -67,7 +78,61 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
         self.plot_multiple_fid_button.clicked.connect(self.plot_multiple_fid)
 
+        # AFR Spin Flipping Signals
+
+        self.poll_state_button.clicked.connect(self.poll_afr_state)
+        self.afp_flip_button.clicked.connect(self.afp_flip)
+
         self.MAX_RATE = 1000000
+        self.state = 1
+
+    def afp_flip(self):
+        wl = self.frequency_lower_spin.value()*1e3
+        wh = self.frequency_higher_spin.value()*1e3
+        l  = self.pulse_length_spin.value()
+
+        t = np.linspace(0,l,num=l*self.MAX_RATE)
+        pulse = afp_pulse_form(t,wl,wh,l)
+
+        analog_output = Task()
+        wrote = int32()
+
+        analog_output.CreateAOVoltageChan(self.afp_terminal_combo.currentText(),
+                                           "",
+                                           -1,1,
+                                           DAQmx_Val_Volts,
+                                           None)
+
+        analog_output.CfgSampClkTiming("",
+                                        self.MAX_RATE,
+                                        DAQmx_Val_Rising,
+                                        DAQmx_Val_FiniteSamps,
+                                        len(pulse))
+
+        analog_output.WriteAnalogF64(len(pulse),
+                                      False,
+                                      10.0,
+                                      DAQmx_Val_GroupByChannel,
+                                      pulse,
+                                      wrote,
+                                      None)
+        
+        analog_output.StartTask()
+
+        analog_output.ClearTask()
+
+    def poll_afr_state(self):
+        self.send_pulse(self.pulse_frequency_spin.value(),
+                            self.pulse_duration_spin.value(),
+                            self.pulse_density_spin.value(),
+                            self.pulse_amplitude_spin.value(),
+                            self.return_pulse_duration_spin.value())
+        if np.sign(np.mean(np.gradient(self.acq_data[:1000]))) == -1:
+            self.state = 1
+            self.curr_state_edit.setText('State 1')
+        else:
+            self.state = 2
+            self.curr_state_edit.setText('State 2')
 
     def set_fid_dir(self):
         # Sets the directory from which to read and write FID series
@@ -122,8 +187,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             if self.import_fid(filename=self.fid_dir + '/' + str(self.i)):
                 fit_result = self.fit_fid(plot=False)
                 self.series_amplitudes.append(fit_result[0][0])
-                self.series_error.append(fit_result[1][0,0])
+                self.series_error.append(fit_result[1])
                 self.series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
+                self.fits.append(fit_result[0].tolist() + [fit_result[1]])
             self.i+=1
 
         self.fid_series_fitting_plot.plot_figure(self.series_timescale,self.series_amplitudes,format='r.')
@@ -141,8 +207,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                                     options=options)
         
         if filename:
-            to_write = np.column_stack((self.series_timescale,self.series_amplitudes,self.series_error))
-            np.savetxt(filename, to_write)
+            np.savetxt(filename, self.fits)
     
     def setup_override(self):
         # Override QtDesigner compiled settings to create QPlots
@@ -206,13 +271,13 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             return
 
         if self.bounds_checkbox.isChecked():
-            lower_bounds = [self.vpp_bound_lower.value(),
+            lower_bounds = [self.vpp_bound_lower.value()*1e-3,
                             self.decay_time_bound_lower.value(),
                             self.frequency_bound_lower.value(),
                             0,
                             self.constant_bound_lower.value()]
 
-            upper_bounds = [self.vpp_bound_upper.value(),
+            upper_bounds = [self.vpp_bound_upper.value()*1e-3,
                             self.decay_time_bound_upper.value(),
                             self.frequency_bound_upper.value(),
                             6.28,
@@ -223,12 +288,13 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             bounds = (-np.inf,np.inf)
 
         if self.initial_checkbox.isChecked():
-            p0 = [self.vpp_bound_initial.value(),
+            p0 = [self.vpp_bound_initial.value()*1e-3,
                   self.decay_time_bound_initial.value(),
                   self.frequency_bound_initial.value(),
                   0,
                   self.constant_bound_initial.value()]
-
+        else:
+            p0 = None
             # Supply initial phase based on knowledge of signal
 
             if np.sign(np.gradient(self.fit_data[:1000])[0]) == -1:
@@ -245,18 +311,24 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage('Inappropriate initial or boundary values')
             return
 
+        err=0
+        for i in np.arange(0,len(self.fit_data)):
+            err+=(self.fit_data[i] - exp_dec(timescale[i],*popt))**2
+        err/=len(self.fit_data)
+        err+=-1*np.mean((self.fit_data-exp_dec(timescale,*popt)))**2
+
         if plot == True:
             self.fid_fitting_plot.axes.cla()
             self.fid_fitting_plot.axes.plot(timescale, exp_dec(timescale,*popt),'b-')
             self.fid_fitting_plot.axes.plot(timescale, self.fit_data,'r-')
             self.fid_fitting_plot.draw()
 
-            self.vpp_found.setText(str(popt[0]*1e3) + ' mV')
-            self.decay_constant_found.setText(str(popt[1]*1e3) + ' ms')
-            self.frequency_found.setText(str(popt[2]) + ' Hz')
+            self.vpp_found.setText(str(np.round(popt[0]*1e3,decimals=3)) + ' mV')
+            self.decay_constant_found.setText(str(np.round(popt[1]*1e3,decimals=3)) + ' ms')
+            self.frequency_found.setText(str(np.round(popt[2],decimals=0)) + ' Hz')
             self.constant_found.setText(str(popt[4]))
 
-        return [popt,pcov]
+        return [popt,err]
 
     def export_fid(self, filename=None):
         if not filename:
@@ -325,6 +397,10 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             return
 
     def send_pulse(self, pulse_frequency, pulse_duration, pulse_density, pulse_amplitude, return_pulse_duration):
+        # I am dispatching the pulse parameters as function arguments to allow the
+        # seperation of parameters between the automated FID acquisition and single
+        # FID acquisition
+        
         # Ensure sampling rate is below the maximum rate for the current DAQ, 1MHz
 
         self.statusbar.showMessage('') # Clear the status bar
@@ -376,7 +452,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                        DAQmx_Val_Rising,
                                        DAQmx_Val_FiniteSamps,
                                        int(return_pulse_duration*1e3))
-        analog_input.CfgAnlgEdgeStartTrig("Dev1/ai0",
+        analog_input.CfgAnlgEdgeStartTrig(self.output_terminal_combo.currentText(),
                                         DAQmx_Val_FallingSlope,
                                         0.01)
 
@@ -411,7 +487,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         data = np.multiply(self.acq_data,larmor_wave)
         data_filtered = butter_lowpass(data,300,60e3,order=5)
 
-        self.acq_data = data_filtered
+        self.acq_data = decimate(data_filtered,
+                                self.decimation_factor_spin.value(),
+                                zero_phase=True)
         self.plot_return_pulse()
 
     def plot_return_pulse(self):
@@ -420,7 +498,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         read_pulse_fft = np.fft.fft(self.acq_data)
         read_pulse_nu  = np.fft.fftfreq(len(self.acq_data),
-                                        (self.MAX_RATE))
+                                        (self.MAX_RATE)*self.decimation_factor_spin.value())
         read_pulse_fft_shifted = np.fft.fftshift(read_pulse_fft)
         read_pulse_nu_shifted = np.fft.fftshift(read_pulse_nu)
 
@@ -447,6 +525,10 @@ if __name__ == '__main__':
         'FID' : {
             'prec' : 7,
         },
+        'State' : {
+            'type': 'int',
+            'value': 2,
+        }
     }
     server = SimpleServer()
     server.createPV(prefix, pvdb)

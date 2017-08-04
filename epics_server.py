@@ -14,3 +14,6 @@ class flynnDriver(Driver):
                             {'count': len(self.nmr_controller.data)})
             self.updatePVs()
             return self.nmr_controller.data
+        elif reason == 'State':
+            self.nmr_controller.poll_afr_state()
+            return self.nmr_controller.state
