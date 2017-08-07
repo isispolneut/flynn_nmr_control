@@ -35,7 +35,7 @@ def afp_pulse_form(t,wl,wh,l):
     gauss = np.exp(-(t - mu)**2/(sigma**2))
     return gauss*np.sin(2*np.pi*w*t)
 
-def exp_dec(t, vpp, decay_time, frequency, phase_diff, constant):
+def exp_dec(t, vpp, decay_time, frequency, constant, phase_diff):
     return 0.5*vpp*np.exp(-(t/decay_time))*np.sin(2*np.pi*frequency*t+phase_diff)+constant
 
 class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -93,13 +93,14 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         t = np.linspace(0,l,num=l*self.MAX_RATE)
         pulse = afp_pulse_form(t,wl,wh,l)
+        print(len(pulse))
 
         analog_output = Task()
         wrote = int32()
 
         analog_output.CreateAOVoltageChan(self.afp_terminal_combo.currentText(),
                                            "",
-                                           -1,1,
+                                           -10,10,
                                            DAQmx_Val_Volts,
                                            None)
 
@@ -118,8 +119,13 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                       None)
         
         analog_output.StartTask()
-
+        done = bool32()
+        while not done:
+            analog_output.IsTaskDone(done)
+            continue
         analog_output.ClearTask()
+
+        
 
     def poll_afr_state(self):
         self.send_pulse(self.pulse_frequency_spin.value(),
@@ -233,7 +239,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fidOutput.setObjectName("fidOutput")
 
         self.fid_fitting_plot = QPlot(self.fitting_tab,xlabel="Time / s",ylabel="Amplitude / V")
-        self.fid_fitting_plot.setGeometry(QtCore.QRect(10, 10, 741, 311))
+        self.fid_fitting_plot.setGeometry(QtCore.QRect(10, 10, 741, 261))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -259,63 +265,101 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_multiple_plot.setSizePolicy(sizePolicy)
         self.fid_multiple_plot.setObjectName("fid_multiple_plot")
 
-        self.input_terminal_combo.addItems(['Dev1/ao0', 'Dev1/ao1'])
-        for i in range(0,8):
-            self.output_terminal_combo.addItem('Dev1/ai' + str(i))
-        self.input_terminal_combo.setCurrentIndex(0)
-        self.output_terminal_combo.setCurrentIndex(0)
-
     def fit_fid(self, plot=True):
         if len(self.fit_data) == 0:
             self.statusbar.showMessage('No FID data collected')
             return
 
-        if self.bounds_checkbox.isChecked():
-            lower_bounds = [self.vpp_bound_lower.value()*1e-3,
-                            self.decay_time_bound_lower.value(),
-                            self.frequency_bound_lower.value(),
-                            0,
-                            self.constant_bound_lower.value()]
+        is_fixed_mask = [bool(self.vpp_bound_fixed_check.checkState()),
+                bool(self.decay_time_bound_fixed_check.checkState()),
+                bool(self.frequency_bound_fixed_check.checkState()),
+                bool(self.constant_bound_fixed_check.checkState()),
+                False]
+        
+        fixed_bounds = [self.vpp_bound_fixed.value()*1e-3,
+                        self.decay_time_bound_fixed.value()*1e-3,
+                        self.frequency_bound_fixed.value(),
+                        self.constant_bound_fixed.value(),
+                        0]
 
-            upper_bounds = [self.vpp_bound_upper.value()*1e-3,
-                            self.decay_time_bound_upper.value(),
+        if self.bounds_checkbox.isChecked():
+            lower_bounds = np.array([self.vpp_bound_lower.value()*1e-3,
+                            self.decay_time_bound_lower.value()*1e-3,
+                            self.frequency_bound_lower.value(),
+                            self.constant_bound_lower.value(),
+                            0])
+            lower_bounds=lower_bounds[~np.array(is_fixed_mask)]
+            upper_bounds = np.array([self.vpp_bound_upper.value()*1e-3,
+                            self.decay_time_bound_upper.value()*1e-3,
                             self.frequency_bound_upper.value(),
-                            6.28,
-                            self.constant_bound_upper.value()]
+                            self.constant_bound_upper.value(),
+                            6.28])
+            upper_bounds=upper_bounds[~np.array(is_fixed_mask)]
 
             bounds = (lower_bounds,upper_bounds)
         else:
             bounds = (-np.inf,np.inf)
 
         if self.initial_checkbox.isChecked():
-            p0 = [self.vpp_bound_initial.value()*1e-3,
-                  self.decay_time_bound_initial.value(),
+            p0 = np.array([self.vpp_bound_initial.value()*1e-3,
+                  self.decay_time_bound_initial.value()*1e-3,
                   self.frequency_bound_initial.value(),
-                  0,
-                  self.constant_bound_initial.value()]
+                  self.constant_bound_initial.value(),
+                  0])
+            p0=p0[~np.array(is_fixed_mask)]
         else:
             p0 = None
-            # Supply initial phase based on knowledge of signal
 
-            if np.sign(np.gradient(self.fit_data[:1000])[0]) == -1:
-                p0[3] = np.pi
+        # This is one of the hackiest dumbest sections of code I've ever written.
+        # To future me or anyone else that ever has to improve or maintain this,
+        # I apologise.
+
+        # Basically to save having to manually create lambdas for all 16 possible
+        # permutations of the arguments for exp_dec, I have built a system whereby
+        # I construct the lambda dynamically as a string and then create it using
+        # eval().
+
+        popt_amended = [None,None,None,None,None]
+        params_st = ['vpp', 'decay_time', 'frequency', 'constant', 'phase_diff']
+        params = ['vpp', 'decay_time', 'frequency', 'constant', 'phase_diff']
+        i=4
+        for m in is_fixed_mask[::-1]:
+            if m:
+                del params[i]
+            i-=1
+
+        fitting_func_str = 'lambda t,' + ','.join(params) + ': exp_dec(t,'
+        i=0
+        for m in is_fixed_mask:
+            if m:
+                fitting_func_str += str(fixed_bounds[i]) + ','
+                popt_amended[i] = fixed_bounds[i]
+            else:
+                fitting_func_str += params_st[i] + ','
+            i+=1
+        fitting_func_str = fitting_func_str[:-1] # Remove trailing comma
+        fitting_func_str+=')'
+
+        fitting_func = eval(fitting_func_str)
 
         # Standard SciPy curve fitting, see documentation at
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
 
         timescale = 1e-6*np.arange(0,len(self.fit_data))
         try:
-            popt, pcov = curve_fit(exp_dec,timescale,
+            popt, pcov = curve_fit(fitting_func,timescale,
                                     self.fit_data,p0=p0,bounds=bounds)
         except ValueError:
             self.statusbar.showMessage('Inappropriate initial or boundary values')
             return
 
-        err=0
-        for i in np.arange(0,len(self.fit_data)):
-            err+=(self.fit_data[i] - exp_dec(timescale[i],*popt))**2
-        err/=len(self.fit_data)
-        err+=-1*np.mean((self.fit_data-exp_dec(timescale,*popt)))**2
+        # Merge the fixed and determined parameter lists
+        i = 0
+        for p in popt_amended:
+            if p == None:
+                popt_amended[popt_amended.index(p)] = popt[i]
+                i+=1
+        popt = popt_amended
 
         if plot == True:
             self.fid_fitting_plot.axes.cla()
@@ -324,11 +368,11 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             self.fid_fitting_plot.draw()
 
             self.vpp_found.setText(str(np.round(popt[0]*1e3,decimals=3)) + ' mV')
-            self.decay_constant_found.setText(str(np.round(popt[1]*1e3,decimals=3)) + ' ms')
+            self.decay_constant_found.setText(str(np.round(popt[1]*1e3,decimals=2)) + ' ms')
             self.frequency_found.setText(str(np.round(popt[2],decimals=0)) + ' Hz')
-            self.constant_found.setText(str(popt[4]))
+            self.constant_found.setText(str(popt[3]))
 
-        return [popt,err]
+        return [popt,pcov]
 
     def export_fid(self, filename=None):
         if not filename:
@@ -453,7 +497,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                        DAQmx_Val_FiniteSamps,
                                        int(return_pulse_duration*1e3))
         analog_input.CfgAnlgEdgeStartTrig(self.output_terminal_combo.currentText(),
-                                        DAQmx_Val_FallingSlope,
+                                        DAQmx_Val_RisingSlope,
                                         0.01)
 
         analog_input.StartTask()

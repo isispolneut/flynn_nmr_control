@@ -274,7 +274,7 @@
         <x>10</x>
         <y>10</y>
         <width>741</width>
-        <height>311</height>
+        <height>261</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -288,9 +288,9 @@
       <property name="geometry">
        <rect>
         <x>9</x>
-        <y>329</y>
+        <y>289</y>
         <width>431</width>
-        <height>141</height>
+        <height>181</height>
        </rect>
       </property>
       <property name="title">
@@ -300,19 +300,12 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
-         <width>421</width>
-         <height>101</height>
+         <y>20</y>
+         <width>411</width>
+         <height>131</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="3">
-         <widget class="QLabel" name="frequency_bound_label">
-          <property name="text">
-           <string>f</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="vpp_bound_upper">
           <property name="suffix">
@@ -343,13 +336,6 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="vpp_bound_label">
-          <property name="text">
-           <string>V_pp</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QDoubleSpinBox" name="vpp_bound_lower">
           <property name="prefix">
@@ -363,13 +349,6 @@
           </property>
           <property name="singleStep">
            <double>0.010000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="decay_time_bound_label">
-          <property name="text">
-           <string>t_0</string>
           </property>
          </widget>
         </item>
@@ -406,26 +385,26 @@
         <item row="2" column="2">
          <widget class="QDoubleSpinBox" name="decay_time_bound_upper">
           <property name="suffix">
-           <string> s</string>
+           <string> ms</string>
           </property>
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>100.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.010000000000000</double>
           </property>
           <property name="value">
-           <double>1.000000000000000</double>
+           <double>100.000000000000000</double>
           </property>
          </widget>
         </item>
         <item row="1" column="2">
          <widget class="QDoubleSpinBox" name="decay_time_bound_lower">
           <property name="suffix">
-           <string> s</string>
+           <string> ms</string>
           </property>
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>100.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.010000000000000</double>
@@ -461,19 +440,6 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="constant_bound_label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>c</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="4">
          <widget class="QDoubleSpinBox" name="constant_bound_upper">
           <property name="maximum">
@@ -488,7 +454,7 @@
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="initial_bounds_label">
           <property name="text">
            <string>Initial</string>
           </property>
@@ -506,17 +472,17 @@
            <double>0.010000000000000</double>
           </property>
           <property name="value">
-           <double>0.100000000000000</double>
+           <double>1.000000000000000</double>
           </property>
          </widget>
         </item>
         <item row="3" column="2">
          <widget class="QDoubleSpinBox" name="decay_time_bound_initial">
           <property name="suffix">
-           <string> s</string>
+           <string> ms</string>
           </property>
           <property name="maximum">
-           <double>1.000000000000000</double>
+           <double>100.000000000000000</double>
           </property>
           <property name="singleStep">
            <double>0.010000000000000</double>
@@ -526,13 +492,153 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="vpp_bound_head_lay">
+          <item>
+           <widget class="QLabel" name="vpp_bound_label">
+            <property name="text">
+             <string>Vpp</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="vpp_bound_fixed_check">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="fixed_bounds_label">
+          <property name="text">
+           <string>Fixed</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QDoubleSpinBox" name="decay_time_bound_fixed">
+          <property name="suffix">
+           <string> ms</string>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4">
+         <widget class="QDoubleSpinBox" name="constant_bound_fixed">
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>0.200000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDoubleSpinBox" name="vpp_bound_fixed">
+          <property name="suffix">
+           <string> mV</string>
+          </property>
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>200.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.500000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QDoubleSpinBox" name="frequency_bound_fixed">
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>275.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <layout class="QHBoxLayout" name="decay_time_head_lay">
+          <item>
+           <widget class="QLabel" name="decay_time_bound_label">
+            <property name="text">
+             <string>t_0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="decay_time_bound_fixed_check">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="3">
+         <layout class="QHBoxLayout" name="frequency_head_lay">
+          <item>
+           <widget class="QLabel" name="frequency_bound_label">
+            <property name="text">
+             <string>f</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="frequency_bound_fixed_check">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="4">
+         <layout class="QHBoxLayout" name="constant_head_lay">
+          <item>
+           <widget class="QLabel" name="constant_bound_label">
+            <property name="text">
+             <string>c</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="constant_bound_fixed_check">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
       <widget class="QCheckBox" name="bounds_checkbox">
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>120</y>
+         <y>160</y>
          <width>81</width>
          <height>17</height>
         </rect>
@@ -545,10 +651,13 @@
        </property>
       </widget>
       <widget class="QCheckBox" name="initial_checkbox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>100</x>
-         <y>120</y>
+         <y>160</y>
          <width>91</width>
          <height>17</height>
         </rect>
@@ -557,15 +666,105 @@
         <string>Use initial val</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
+      <widget class="QDoubleSpinBox" name="decay_time_bound_initial_2">
+       <property name="geometry">
+        <rect>
+         <x>520</x>
+         <y>110</y>
+         <width>78</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="suffix">
+        <string> s</string>
+       </property>
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.400000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="constant_bound_initial_2">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>110</y>
+         <width>79</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <double>0.200000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="frequency_bound_initial_2">
+       <property name="geometry">
+        <rect>
+         <x>604</x>
+         <y>110</y>
+         <width>80</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="suffix">
+        <string> Hz</string>
+       </property>
+       <property name="maximum">
+        <double>1000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>300.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="vpp_bound_initial_2">
+       <property name="geometry">
+        <rect>
+         <x>435</x>
+         <y>110</y>
+         <width>79</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="suffix">
+        <string> mV</string>
+       </property>
+       <property name="maximum">
+        <double>200.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+      <zorder>layoutWidget</zorder>
+      <zorder>bounds_checkbox</zorder>
+      <zorder>initial_checkbox</zorder>
+      <zorder>decay_time_bound_initial_2</zorder>
+      <zorder>constant_bound_initial_2</zorder>
+      <zorder>frequency_bound_initial_2</zorder>
+      <zorder>vpp_bound_initial_2</zorder>
+      <zorder>frequency_found_label</zorder>
      </widget>
      <widget class="QPushButton" name="fit_button">
       <property name="geometry">
        <rect>
         <x>650</x>
-        <y>408</y>
+        <y>390</y>
         <width>101</width>
         <height>51</height>
        </rect>
@@ -578,9 +777,9 @@
       <property name="geometry">
        <rect>
         <x>450</x>
-        <y>330</y>
+        <y>290</y>
         <width>191</width>
-        <height>141</height>
+        <height>181</height>
        </rect>
       </property>
       <property name="title">
@@ -592,7 +791,7 @@
          <x>10</x>
          <y>20</y>
          <width>171</width>
-         <height>111</height>
+         <height>151</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
@@ -650,17 +849,17 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="frequency_found_label">
-          <property name="text">
-           <string>Osc. Frequency</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="vpp_found_label">
           <property name="text">
            <string>P2P Voltage</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="frequency_found_label">
+          <property name="text">
+           <string>Osc. Frequency</string>
           </property>
          </widget>
         </item>
@@ -671,7 +870,7 @@
       <property name="geometry">
        <rect>
         <x>650</x>
-        <y>340</y>
+        <y>330</y>
         <width>101</width>
         <height>51</height>
        </rect>
@@ -1285,7 +1484,48 @@
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
        <item row="0" column="1">
-        <widget class="QComboBox" name="output_terminal_combo"/>
+        <widget class="QComboBox" name="output_terminal_combo">
+         <item>
+          <property name="text">
+           <string>Dev1/ai0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai5</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ai7</string>
+          </property>
+         </item>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="output_terminal_label">
@@ -1302,7 +1542,18 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QComboBox" name="input_terminal_combo"/>
+        <widget class="QComboBox" name="input_terminal_combo">
+         <item>
+          <property name="text">
+           <string>Dev1/ao0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Dev1/ao1</string>
+          </property>
+         </item>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="afp_terminal_label">
