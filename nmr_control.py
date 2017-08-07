@@ -30,9 +30,9 @@ def afp_pulse_form(t,wl,wh,l):
     # frequency is linearly interpolated over the
     # pulse period between wl and wh.
     w = t*(np.abs(wh-wl)/(l)) + wl
-    mu = l/2
-    sigma = l/4
-    gauss = np.exp(-(t - mu)**2/(sigma**2))
+    mu = (wh+wl)/2
+    sigma = (wh-wl)/4
+    gauss = np.exp(-((w - mu)**2)/(sigma**2))
     return gauss*np.sin(2*np.pi*w*t)
 
 def exp_dec(t, vpp, decay_time, frequency, constant, phase_diff):
@@ -93,7 +93,6 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         t = np.linspace(0,l,num=l*self.MAX_RATE)
         pulse = afp_pulse_form(t,wl,wh,l)
-        print(len(pulse))
 
         analog_output = Task()
         wrote = int32()
@@ -123,9 +122,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         while not done:
             analog_output.IsTaskDone(done)
             continue
-        analog_output.ClearTask()
-
-        
+        analog_output.ClearTask()    
 
     def poll_afr_state(self):
         self.send_pulse(self.pulse_frequency_spin.value(),
