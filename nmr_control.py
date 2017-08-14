@@ -1,9 +1,10 @@
+from flynn import *
+
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg')
-from scipy.signal import butter, lfilter, freqz, decimate
 from scipy.optimize import curve_fit
 
 from PyDAQmx import *
@@ -17,26 +18,6 @@ from QPlot import QPlot
 from epics_server import flynnDriver
 from pcaspy import SimpleServer
 from pcaspy.tools import ServerThread
-
-def butter_lowpass(data, cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = np.divide(cutoff, nyq)
-    b, a = butter(order, normal_cutoff, btype='lowpass', analog=False)
-    y = lfilter(b,a,data)
-    return y
-
-def afp_pulse_form(t,wl,wh,l):
-    # Outputs a Gaussian modulated sine wave whose
-    # frequency is linearly interpolated over the
-    # pulse period between wl and wh.
-    w = t*(np.abs(wh-wl)/(l)) + wl
-    mu = (wh+wl)/2
-    sigma = (wh-wl)/4
-    gauss = np.exp(-((w - mu)**2)/(sigma**2))
-    return gauss*np.sin(2*np.pi*w*t)
-
-def exp_dec(t, vpp, decay_time, frequency, constant, phase_diff):
-    return 0.5*vpp*np.exp(-(t/decay_time))*np.sin(2*np.pi*frequency*t+phase_diff)+constant
 
 class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -53,14 +34,25 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Single FID Acquisition Signals
 
-        def send_pulse():
-            self.send_pulse(self.pulse_frequency_spin.value(),
+        def wrapd_send_pulse():
+            # There are neater syntaxes for this than an inline function
+            # wrapper but this works for now
+            self.acq_data = send_pulse(self.pulse_frequency_spin.value(),
                             self.pulse_duration_spin.value(),
                             self.pulse_density_spin.value(),
                             self.pulse_amplitude_spin.value(),
-                            self.return_pulse_duration_spin.value())
+                            self.return_pulse_duration_spin.value(),
+                            input_terminal=self.input_terminal_combo.currentText(),
+                            output_terminal=self.output_terminal_combo.currentText())
 
-        self.pulse_button.clicked.connect(send_pulse)
+            if not self.acq_data == None:
+                return
+            else:
+                self.statusbar.showMessage("Error sending pulse, are your parameters correct?")
+
+            self.filter_return_pulse()
+
+        self.pulse_button.clicked.connect(wrapd_send_pulse)
         self.export_fid_button.clicked.connect(self.export_fid)
         self.import_fid_button.clicked.connect(self.import_fid)
 
@@ -78,54 +70,24 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
         self.plot_multiple_fid_button.clicked.connect(self.plot_multiple_fid)
 
-        # AFR Spin Flipping Signals
+        # AFP Spin Flipping Signals
+
+        def wrapd_afp_flip():
+            afp_flip(self.frequency_lower_spin.value(),
+                     self.frequency_higher_spin.value(),
+                     self.frequency_larmor_spin.value(),
+                     self.afp_pulse_length_spin.value(),
+                     self.afp_pulse_amplitude_spin.value(),
+                     self.afp_terminal_combo.currentText())
 
         self.poll_state_button.clicked.connect(self.poll_afr_state)
-        self.afp_flip_button.clicked.connect(self.afp_flip)
+        self.afp_flip_button.clicked.connect(wrapd_afp_flip)
 
         self.MAX_RATE = 1000000
         self.state = 1
 
-    def afp_flip(self):
-        wl = self.frequency_lower_spin.value()*1e3
-        wh = self.frequency_higher_spin.value()*1e3
-        l  = self.pulse_length_spin.value()
-
-        t = np.linspace(0,l,num=l*self.MAX_RATE)
-        pulse = afp_pulse_form(t,wl,wh,l)
-
-        analog_output = Task()
-        wrote = int32()
-
-        analog_output.CreateAOVoltageChan(self.afp_terminal_combo.currentText(),
-                                           "",
-                                           -10,10,
-                                           DAQmx_Val_Volts,
-                                           None)
-
-        analog_output.CfgSampClkTiming("",
-                                        self.MAX_RATE,
-                                        DAQmx_Val_Rising,
-                                        DAQmx_Val_FiniteSamps,
-                                        len(pulse))
-
-        analog_output.WriteAnalogF64(len(pulse),
-                                      False,
-                                      10.0,
-                                      DAQmx_Val_GroupByChannel,
-                                      pulse,
-                                      wrote,
-                                      None)
-        
-        analog_output.StartTask()
-        done = bool32()
-        while not done:
-            analog_output.IsTaskDone(done)
-            continue
-        analog_output.ClearTask()    
-
     def poll_afr_state(self):
-        self.send_pulse(self.pulse_frequency_spin.value(),
+        self.acq_data = send_pulse(self.pulse_frequency_spin.value(),
                             self.pulse_duration_spin.value(),
                             self.pulse_density_spin.value(),
                             self.pulse_amplitude_spin.value(),
@@ -437,83 +399,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage('Invalid directory')
             return
 
-    def send_pulse(self, pulse_frequency, pulse_duration, pulse_density, pulse_amplitude, return_pulse_duration):
-        # I am dispatching the pulse parameters as function arguments to allow the
-        # seperation of parameters between the automated FID acquisition and single
-        # FID acquisition
-        
-        # Ensure sampling rate is below the maximum rate for the current DAQ, 1MHz
 
-        self.statusbar.showMessage('') # Clear the status bar
-        if pulse_frequency*pulse_density > 1e3:
-            self.statusbar.showMessage('Requested sampling rate too high')
-            return
-
-        # DAQmx API calls to pulse for pulse_duration and then read for return_pulse_duration
-        # C API documentation can be found in National Instruments folder. Python API wraps
-        # C API calls 1 to 1.
-
-        analog_output = Task()
-        analog_input  = Task()
-        wrote = int32()
-        read  = int32()
-        data = np.zeros((int(return_pulse_duration*1e3),),dtype=np.float64)
-        pulse = np.sin(2*np.pi*np.linspace(0,1,pulse_density,endpoint=False))
-
-        analog_output.CreateAOVoltageChan(self.input_terminal_combo.currentText(),
-                                           "",
-                                           -1,1,
-                                           DAQmx_Val_Volts,
-                                           None)
-
-        analog_output.CfgSampClkTiming("",
-                                        pulse_frequency*pulse_density*1e3,
-                                        DAQmx_Val_Rising,
-                                        DAQmx_Val_FiniteSamps,
-                                        int(pulse_frequency*pulse_duration)*pulse_density)
-
-        analog_output.WriteAnalogF64(len(pulse),
-                                      False,
-                                      10.0,
-                                      DAQmx_Val_GroupByChannel,
-                                      pulse,
-                                      wrote,
-                                      None)
-
-
-        analog_input.CreateAIVoltageChan(self.output_terminal_combo.currentText(),
-                                          "",
-                                          -1,
-                                          -0.2,0.2,
-                                          DAQmx_Val_Volts,
-                                          None)
-
-        analog_input.CfgSampClkTiming("",
-                                       self.MAX_RATE,
-                                       DAQmx_Val_Rising,
-                                       DAQmx_Val_FiniteSamps,
-                                       int(return_pulse_duration*1e3))
-        analog_input.CfgAnlgEdgeStartTrig(self.output_terminal_combo.currentText(),
-                                        DAQmx_Val_RisingSlope,
-                                        0.01)
-
-        analog_input.StartTask()
-        analog_output.StartTask()
-
-        analog_input.ReadAnalogF64(-1,
-                                    10.0,
-                                    DAQmx_Val_GroupByChannel,
-                                    data,
-                                    len(data),
-                                    read,
-                                    None)
-
-        analog_output.ClearTask()
-        analog_input.ClearTask()
-
-        self.acq_data = data[2150:]
-        self.filter_return_pulse()
-        
         
     def filter_return_pulse(self): 
         # As per Parnell 2008 the signal is multiplied by a sine wave near the Larmor freq

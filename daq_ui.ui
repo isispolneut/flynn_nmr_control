@@ -1381,14 +1381,69 @@
         <x>10</x>
         <y>10</y>
         <width>158</width>
-        <height>74</height>
+        <height>126</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_9">
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="frequency_larmor_spin">
+         <property name="suffix">
+          <string> kHz</string>
+         </property>
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>33.719999999999999</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="frequency_higher_label">
+         <property name="text">
+          <string>Frequency Hi</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="pulse_length_label">
+         <property name="text">
+          <string>Pulse Length</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="frequency_lower_label">
          <property name="text">
           <string>Frequency Lo</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="afp_pulse_length_spin">
+         <property name="suffix">
+          <string> s</string>
+         </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="minimum">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>2.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -1408,13 +1463,6 @@
          </property>
          <property name="value">
           <double>18.719999999999999</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="frequency_higher_label">
-         <property name="text">
-          <string>Frequency Hi</string>
          </property>
         </widget>
        </item>
@@ -1438,31 +1486,32 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="pulse_length_label">
+        <widget class="QLabel" name="frequency_larmor_label">
          <property name="text">
-          <string>Pulse Length</string>
+          <string>Larmor Freq</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QDoubleSpinBox" name="pulse_length_spin">
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="afp_pulse_amplitude_spin">
          <property name="suffix">
-          <string> s</string>
-         </property>
-         <property name="decimals">
-          <number>2</number>
-         </property>
-         <property name="minimum">
-          <double>0.010000000000000</double>
+          <string> V</string>
          </property>
          <property name="maximum">
-          <double>2.000000000000000</double>
+          <double>5.000000000000000</double>
          </property>
          <property name="singleStep">
-          <double>0.010000000000000</double>
+          <double>0.100000000000000</double>
          </property>
          <property name="value">
           <double>0.500000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Pulse Amp.</string>
          </property>
         </widget>
        </item>
