@@ -45,11 +45,6 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                             input_terminal=self.input_terminal_combo.currentText(),
                             output_terminal=self.output_terminal_combo.currentText())
 
-            if not self.acq_data == None:
-                return
-            else:
-                self.statusbar.showMessage("Error sending pulse, are your parameters correct?")
-
             self.filter_return_pulse()
 
         self.pulse_button.clicked.connect(wrapd_send_pulse)
@@ -149,12 +144,15 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         while self.i < self.afid_n_series_spin_2.value():
 
-            if self.import_fid(filename=self.fid_dir + '/' + str(self.i)):
-                fit_result = self.fit_fid(plot=False)
-                self.series_amplitudes.append(fit_result[0][0])
-                self.series_error.append(fit_result[1])
-                self.series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
-                self.fits.append(fit_result[0].tolist() + [fit_result[1]])
+            if self.import_fid(filename=self.fid_dir + '/' + str(self.afid_file_prefix.text()) + str(self.i)):
+                try:
+                    fit_result = self.fit_fid(plot=False)
+                    self.series_amplitudes.append(fit_result[0][0])
+                    self.series_error.append(fit_result[1])
+                    self.series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
+                    self.fits.append(fit_result[0][0])
+                except RuntimeError:
+                    continue
             self.i+=1
 
         self.fid_series_fitting_plot.plot_figure(self.series_timescale,self.series_amplitudes,format='r.')

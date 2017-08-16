@@ -1170,11 +1170,11 @@
             <x>10</x>
             <y>20</y>
             <width>171</width>
-            <height>91</height>
+            <height>111</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="2" column="0" colspan="2">
+           <item row="3" column="0" colspan="2">
             <widget class="QPushButton" name="fit_fid_series_button">
              <property name="text">
               <string>Fit</string>
@@ -1226,6 +1226,16 @@
               <string>N Series</string>
              </property>
             </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="afid_file_prefix_label">
+             <property name="text">
+              <string>Prefix</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="afid_file_prefix"/>
            </item>
           </layout>
          </widget>
@@ -1400,7 +1410,7 @@
           <double>100.000000000000000</double>
          </property>
          <property name="value">
-          <double>33.719999999999999</double>
+          <double>33.909999999999997</double>
          </property>
         </widget>
        </item>
@@ -1462,7 +1472,7 @@
           <double>100.000000000000000</double>
          </property>
          <property name="value">
-          <double>18.719999999999999</double>
+          <double>28.910000000000000</double>
          </property>
         </widget>
        </item>
@@ -1481,7 +1491,7 @@
           <double>100.000000000000000</double>
          </property>
          <property name="value">
-          <double>48.719999999999999</double>
+          <double>38.909999999999997</double>
          </property>
         </widget>
        </item>

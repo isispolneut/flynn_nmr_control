@@ -90,10 +90,6 @@ def afp_flip(wl,wh,w_larmor,l,amplitude,out='Dev1/ao1',readback='Dev1/ai6'):
 def send_pulse(pulse_frequency, pulse_duration, 
                 pulse_density, pulse_amplitude, return_pulse_duration,
                 input_terminal='Dev1/ao0', output_terminal='Dev1/ai0'):
-    # I am dispatching the pulse parameters as function arguments to allow the
-    # seperation of parameters between the automated FID acquisition and single
-    # FID acquisition
-    
     # Ensure sampling rate is below the maximum rate for the current DAQ, 1MHz
 
     if pulse_frequency*pulse_density > 1e3:
