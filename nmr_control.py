@@ -13,12 +13,15 @@ from PyDAQmx import *
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog
 from daq_ui import Ui_MainWindow
+from params_dialog import ParamsDialog
 
 from QPlot import QPlot
 
 from epics_server import flynnDriver
 from pcaspy import SimpleServer
 from pcaspy.tools import ServerThread
+
+        
 
 class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -66,6 +69,13 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fit_fid_series_button.clicked.connect(self.fit_fid_series)
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
         self.plot_multiple_fid_button.clicked.connect(self.plot_multiple_fid)
+
+        def params_dialog():
+            # Brings up the parameters dialog
+            pd = ParamsDialog(self)
+            pd.show()
+
+        self.fid_series_params_button.clicked.connect(params_dialog)
 
         # AFP Spin Flipping Signals
 

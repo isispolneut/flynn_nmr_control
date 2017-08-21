@@ -1170,7 +1170,7 @@
             <x>10</x>
             <y>20</y>
             <width>171</width>
-            <height>111</height>
+            <height>132</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
@@ -1236,6 +1236,13 @@
            </item>
            <item row="2" column="1">
             <widget class="QLineEdit" name="afid_file_prefix"/>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QPushButton" name="fid_series_params_button">
+             <property name="text">
+              <string>Set Parameters</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
