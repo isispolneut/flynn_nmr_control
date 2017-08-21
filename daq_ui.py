@@ -53,7 +53,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.pulse_duration_label, 1, 0, 1, 1)
         self.pulse_duration_spin = QtWidgets.QDoubleSpinBox(self.layoutWidget)
         self.pulse_duration_spin.setDecimals(1)
-        self.pulse_duration_spin.setMinimum(1.0)
+        self.pulse_duration_spin.setMinimum(0.1)
         self.pulse_duration_spin.setObjectName("pulse_duration_spin")
         self.gridLayout.addWidget(self.pulse_duration_spin, 1, 1, 1, 1)
         self.pulse_density_label = QtWidgets.QLabel(self.layoutWidget)

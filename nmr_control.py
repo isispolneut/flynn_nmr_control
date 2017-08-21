@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg')
 from scipy.optimize import curve_fit
+from scipy.stats import linregress
 
 from PyDAQmx import *
 
@@ -27,7 +28,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.acq_data = []
         self.fit_data = []
-        self.series_amplitudes = []
+        self.fit_params = []
+        self.fit_error = []
         self.fits = []
 
         self.i = 0
@@ -112,11 +114,12 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Wrapped function to attach to the acquisition timer timeout
         def get_and_save():
-            self.send_pulse(self.apulse_frequency_spin.value(),
+            self.acq_data = send_pulse(self.apulse_frequency_spin.value(),
                             self.apulse_duration_spin.value(),
                             self.apulse_density_spin.value(),
                             self.apulse_amplitude_spin.value(),
                             self.areturn_pulse_duration_spin.value())
+            self.filter_return_pulse()
             self.export_fid(filename=self.fid_dir + '/' + str(self.i))
             self.i+=1
             if self.i>=self.afid_n_series_spin.value():
@@ -138,24 +141,55 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.timer_timer.start(self.afid_sampling_period_spin.value()*600)
 
     def fit_fid_series(self):
-        self.series_amplitudes = []
-        self.series_error = []
-        self.series_timescale = []
-
+        series_amplitudes=[]
+        series_timescale=[]
+        self.i = 0
         while self.i < self.afid_n_series_spin_2.value():
 
             if self.import_fid(filename=self.fid_dir + '/' + str(self.afid_file_prefix.text()) + str(self.i)):
                 try:
                     fit_result = self.fit_fid(plot=False)
-                    self.series_amplitudes.append(fit_result[0][0])
-                    self.series_error.append(fit_result[1])
-                    self.series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
-                    self.fits.append(fit_result[0][0])
+
+                    series_amplitudes.append(np.diag(fit_result[1]))
+                    series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
+                    
+                    fit_result[0].append(self.afid_sampling_period_spin_2.value()*self.i)
+                    self.fit_error.append(np.diag(fit_result[1]))
+                    self.fit_params.append(fit_result[0])
                 except RuntimeError:
+                    # If a fit isn't found for a given FID with the supplied parameters, simply skip the file
+                    # This will leave a gap but it at least won't crash the whole routine for now.
+                    print("Unable to fit FID #" + str(self.i))
+                    self.i+=1
                     continue
             self.i+=1
 
-        self.fid_series_fitting_plot.plot_figure(self.series_timescale,self.series_amplitudes,format='r.')
+        params = np.column_stack(self.fit_params)
+        errors = np.column_stack(self.fit_error)
+        V = params[0]
+        t = params[-1]
+        lV = np.log(V)
+        Verr = np.sqrt(errors[0])
+
+        s,i,r,p,std = linregress(t,lV)
+
+        residuals = abs(lV - (s*t+i))
+        outlier_indices = np.where(abs(residuals-np.mean(residuals)) > 0.8*np.std(residuals))
+
+        for i in outlier_indices[::-1]:
+            t=np.delete(t,i)
+            lV=np.delete(lV,i)
+            V=np.delete(V,i)
+            Verr = np.delete(Verr,i)
+
+        s,i,r,p,std = linregress(t,lV)
+
+        self.fid_series_fitting_plot.axes.cla()
+        self.fid_series_fitting_plot.axes.set_xlabel("time/min")
+        self.fid_series_fitting_plot.axes.set_ylabel("amplitude/V")
+        self.fid_series_fitting_plot.axes.plot(t,lV,'r.')
+        self.fid_series_fitting_plot.axes.plot(t,s*t+i,'b-')
+        self.fid_series_fitting_plot.draw()
 
     def export_fid_series_fit(self):
         if len(self.series_amplitudes) == 0:
@@ -170,7 +204,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                                     options=options)
         
         if filename:
-            np.savetxt(filename, self.fits)
+            np.savetxt(filename, self.fit_params)
+            np.savetxt(filename+"_err", self.series_error)
     
     def setup_override(self):
         # Override QtDesigner compiled settings to create QPlots
@@ -305,7 +340,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         timescale = 1e-6*np.arange(0,len(self.fit_data))
         try:
             popt, pcov = curve_fit(fitting_func,timescale,
-                                    self.fit_data,p0=p0,bounds=bounds)
+                                    self.fit_data,p0=p0,bounds=bounds,sigma=1e-3*np.ones((len(self.fit_data),)),
+                                    absolute_sigma=True, max_nfev=600)
         except ValueError:
             self.statusbar.showMessage('Inappropriate initial or boundary values')
             return
@@ -372,7 +408,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         try:
             text = self.multiple_fids_input.text()
             vals = text.split(sep=',')
-
+            print(vals)
             fids = []
             for v in vals:
                 if v.find('-') == -1:
