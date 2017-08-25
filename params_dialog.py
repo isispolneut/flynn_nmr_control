@@ -236,7 +236,6 @@ class Ui_Dialog(object):
         self.frequency_bound_initial_2.setSuffix(_translate("Dialog", " Hz"))
         self.vpp_bound_initial_2.setSuffix(_translate("Dialog", " mV"))
 
-
 class ParamsDialog(QtWidgets.QDialog, Ui_Dialog):
     def __init__(self,parent):
         QtWidgets.QDialog.__init__(self,parent=parent)

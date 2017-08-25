@@ -274,12 +274,14 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         is_fixed_mask = [bool(self.vpp_bound_fixed_check.checkState()),
                 bool(self.decay_time_bound_fixed_check.checkState()),
+                False,
                 bool(self.frequency_bound_fixed_check.checkState()),
                 bool(self.constant_bound_fixed_check.checkState()),
                 False]
         
         fixed_bounds = [self.vpp_bound_fixed.value()*1e-3,
                         self.decay_time_bound_fixed.value()*1e-3,
+                        0,
                         self.frequency_bound_fixed.value(),
                         self.constant_bound_fixed.value(),
                         0]
@@ -287,12 +289,14 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.bounds_checkbox.isChecked():
             lower_bounds = np.array([self.vpp_bound_lower.value()*1e-3,
                             self.decay_time_bound_lower.value()*1e-3,
+                            0,
                             self.frequency_bound_lower.value(),
                             self.constant_bound_lower.value(),
                             0])
             lower_bounds=lower_bounds[~np.array(is_fixed_mask)]
             upper_bounds = np.array([self.vpp_bound_upper.value()*1e-3,
                             self.decay_time_bound_upper.value()*1e-3,
+                            1,
                             self.frequency_bound_upper.value(),
                             self.constant_bound_upper.value(),
                             6.28])
@@ -305,6 +309,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.initial_checkbox.isChecked():
             p0 = np.array([self.vpp_bound_initial.value()*1e-3,
                   self.decay_time_bound_initial.value()*1e-3,
+                  0,
                   self.frequency_bound_initial.value(),
                   self.constant_bound_initial.value(),
                   0])
@@ -321,9 +326,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         # I construct the lambda dynamically as a string and then create it using
         # eval().
 
-        popt_amended = [None,None,None,None,None]
-        params_st = ['vpp', 'decay_time', 'frequency', 'constant', 'phase_diff']
-        params = ['vpp', 'decay_time', 'frequency', 'constant', 'phase_diff']
+        popt_amended = [None,None,None,None,None,None]
+        params_st = ['vpp', 'decay_time', 'b', 'frequency', 'constant', 'phase_diff']
+        params = ['vpp', 'decay_time', 'b', 'frequency', 'constant', 'phase_diff']
         i=4
         for m in is_fixed_mask[::-1]:
             if m:
@@ -364,6 +369,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                 i+=1
         popt = popt_amended
 
+        print(popt[2])
         if plot == True:
             self.fid_fitting_plot.axes.cla()
             self.fid_fitting_plot.axes.plot(timescale, exp_dec(timescale,*popt),'b-')
@@ -372,8 +378,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
             self.vpp_found.setText(str(np.round(popt[0]*1e3,decimals=3)) + ' mV')
             self.decay_constant_found.setText(str(np.round(popt[1]*1e3,decimals=2)) + ' ms')
-            self.frequency_found.setText(str(np.round(popt[2],decimals=0)) + ' Hz')
-            self.constant_found.setText(str(popt[3]))
+            self.frequency_found.setText(str(np.round(popt[3],decimals=0)) + ' Hz')
+            self.constant_found.setText(str(popt[4]))
 
         return [popt,pcov]
 

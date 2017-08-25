@@ -5,8 +5,8 @@ from PyDAQmx import *
 
 MAX_RATE = 1000000
 
-def exp_dec(t, vpp, decay_time, frequency, constant, phase_diff):
-    return 0.5*vpp*np.exp(-(t/decay_time))*np.sin(2*np.pi*frequency*t+phase_diff)+constant
+def exp_dec(t, vpp, decay_time, b, frequency, constant, phase_diff):
+    return 0.5*vpp*np.exp(-(t/decay_time)**(1+b**2))*np.sin(2*np.pi*frequency*t+phase_diff)+constant
 
 def butter_lowpass(data, cutoff, fs, order=5):
     nyq = 0.5 * fs
