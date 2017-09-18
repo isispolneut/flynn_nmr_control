@@ -245,7 +245,7 @@ class ParamsDialog(QtWidgets.QDialog, Ui_Dialog):
         self.vpp_bound_fixed_check.setCheckState(parent.vpp_bound_fixed_check.checkState())
         self.decay_time_bound_fixed_check.setCheckState(parent.decay_time_bound_fixed_check.checkState())
         self.frequency_bound_fixed_check.setCheckState(parent.frequency_bound_fixed_check.checkState())
-        self.constant_bound_fixed_check.setCheckState(parent.frequency_bound_fixed_check.checkState())
+        self.constant_bound_fixed_check.setCheckState(parent.constant_bound_fixed_check.checkState())
 
         self.vpp_bound_fixed.setValue(parent.vpp_bound_fixed.value())
         self.decay_time_bound_fixed.setValue(parent.decay_time_bound_fixed.value())

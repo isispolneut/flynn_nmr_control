@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Qt5Agg')
 from scipy.optimize import curve_fit
+from scipy.signal import resample
 from scipy.stats import linregress
 
 from PyDAQmx import *
@@ -30,7 +31,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setup_override()
 
         self.acq_data = []
+        self.timescale = []
         self.fit_data = []
+        self.fit_time = []
         self.fit_params = []
         self.fit_error = []
         self.fits = []
@@ -166,6 +169,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                     fit_result[0].append(self.afid_sampling_period_spin_2.value()*self.i)
                     self.fit_error.append(np.diag(fit_result[1]))
                     self.fit_params.append(fit_result[0])
+                    print("Fit FID # " + str(self.i))
                 except RuntimeError:
                     # If a fit isn't found for a given FID with the supplied parameters, simply skip the file
                     # This will leave a gap but it at least won't crash the whole routine for now.
@@ -202,7 +206,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_series_fitting_plot.draw()
 
     def export_fid_series_fit(self):
-        if len(self.series_amplitudes) == 0:
+        if len(self.fit_params) == 0:
             self.statusbar.showMessage('No FID data collected')
             return
 
@@ -215,7 +219,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         
         if filename:
             np.savetxt(filename, self.fit_params)
-            np.savetxt(filename+"_err", self.series_error)
+            np.savetxt(filename+"_err", self.fit_error)
     
     def setup_override(self):
         # Override QtDesigner compiled settings to create QPlots
@@ -329,7 +333,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         popt_amended = [None,None,None,None,None,None]
         params_st = ['vpp', 'decay_time', 'b', 'frequency', 'constant', 'phase_diff']
         params = ['vpp', 'decay_time', 'b', 'frequency', 'constant', 'phase_diff']
-        i=4
+        i=len(params)-1
         for m in is_fixed_mask[::-1]:
             if m:
                 del params[i]
@@ -352,9 +356,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         # Standard SciPy curve fitting, see documentation at
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
 
-        timescale = 1e-6*np.arange(0,len(self.fit_data))
         try:
-            popt, pcov = curve_fit(fitting_func,timescale,
+            popt, pcov = curve_fit(fitting_func,self.fit_time,
                                     self.fit_data,p0=p0,bounds=bounds,sigma=1e-3*np.ones((len(self.fit_data),)),
                                     absolute_sigma=True, max_nfev=600)
         except ValueError:
@@ -369,11 +372,11 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                 i+=1
         popt = popt_amended
 
-        print(popt[2])
         if plot == True:
+            self.fit_time = np.array(self.fit_time)
             self.fid_fitting_plot.axes.cla()
-            self.fid_fitting_plot.axes.plot(timescale, exp_dec(timescale,*popt),'b-')
-            self.fid_fitting_plot.axes.plot(timescale, self.fit_data,'r-')
+            self.fid_fitting_plot.axes.plot(self.fit_time, exp_dec(self.fit_time,*popt),'b-')
+            self.fid_fitting_plot.axes.plot(self.fit_time, self.fit_data,'r-')
             self.fid_fitting_plot.draw()
 
             self.vpp_found.setText(str(np.round(popt[0]*1e3,decimals=3)) + ' mV')
@@ -397,8 +400,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                                                         options=options)
  
         if filename:
-            timescale = np.multiply(np.arange(0,len(self.acq_data)),1e-6)
-            to_write = np.column_stack((timescale,self.acq_data))
+            to_write = np.column_stack((self.timescale,self.acq_data))
             np.savetxt(filename, to_write)
 
     def import_fid(self, filename=None):
@@ -412,7 +414,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if filename:
             try:
-                self.fit_data = list(zip(*np.loadtxt(filename)))[1]
+                data = list(zip(*np.loadtxt(filename)))
+                self.fit_data = data[1]
+                self.fit_time = data[0]
                 self.fid_fitting_plot.axes.cla()
                 self.fid_fitting_plot.axes.plot(1e-6*np.arange(0,len(self.fit_data)), self.fit_data,'r-')
                 self.fid_fitting_plot.draw()
@@ -435,9 +439,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                         fids.append(str(i))
             self.fid_multiple_plot.axes.cla()
             for fid in fids:
-                self.fid_data = np.multiply(list(zip(*np.loadtxt(self.fid_dir + '/' + fid)))[1],1e3)
-                timescale = 1e-3 * np.arange(0,len(self.fid_data))
-                self.fid_multiple_plot.axes.plot(timescale,self.fid_data)
+                data = list(zip(*np.loadtxt(self.fid_dir + '/' + fid)))
+                self.fid_multiple_plot.axes.plot(data[0],np.multiply(data[1],1e3))
             self.fid_multiple_plot.axes.set_xlabel(self.fid_multiple_plot.xlabel)
             self.fid_multiple_plot.axes.set_ylabel(self.fid_multiple_plot.ylabel)
             self.fid_multiple_plot.draw()
@@ -464,9 +467,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         data = np.multiply(self.acq_data,larmor_wave)
         data_filtered = butter_lowpass(data,300,60e3,order=5)
 
-        self.acq_data = decimate(data_filtered,
-                                self.decimation_factor_spin.value(),
-                                zero_phase=True)
+        self.acq_data, self.timescale = resample(data_filtered, int(len(data_filtered)/self.decimation_factor_spin.value()), t=1e-6*np.arange(0,len(self.acq_data)))
         self.plot_return_pulse()
 
     def plot_return_pulse(self):
@@ -482,7 +483,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pulseOutput.plot_figure(np.multiply(read_pulse_nu_shifted,1e12),
                                     np.absolute(read_pulse_fft_shifted)**2)
 
-        self.fidOutput.plot_figure(0.001*np.arange(0,len(self.acq_data)), np.multiply(self.acq_data,1000))
+        self.fidOutput.plot_figure(self.timescale, np.multiply(self.acq_data,1000))
 
         # Formatting arguments for plots, perhaps in future this can be implemented in an options dialog?
 
