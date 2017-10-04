@@ -22,8 +22,6 @@ from epics_server import flynnDriver
 from pcaspy import SimpleServer
 from pcaspy.tools import ServerThread
 
-        
-
 class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -163,7 +161,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                 try:
                     fit_result = self.fit_fid(plot=False)
 
-                    series_amplitudes.append(np.diag(fit_result[1]))
+                    series_amplitudes.append(fit_result[0][0])
                     series_timescale.append(self.afid_sampling_period_spin_2.value()*self.i)
                     
                     fit_result[0].append(self.afid_sampling_period_spin_2.value()*self.i)
@@ -178,32 +176,12 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                     continue
             self.i+=1
 
-        params = np.column_stack(self.fit_params)
-        errors = np.column_stack(self.fit_error)
-        V = params[0]
-        t = params[-1]
-        lV = np.log(V)
-        Verr = np.sqrt(errors[0])
-
-        s,i,r,p,std = linregress(t,lV)
-
-        residuals = abs(lV - (s*t+i))
-        outlier_indices = np.where(abs(residuals-np.mean(residuals)) > 0.8*np.std(residuals))
-
-        for i in outlier_indices[::-1]:
-            t=np.delete(t,i)
-            lV=np.delete(lV,i)
-            V=np.delete(V,i)
-            Verr = np.delete(Verr,i)
-
-        s,i,r,p,std = linregress(t,lV)
-
         self.fid_series_fitting_plot.axes.cla()
         self.fid_series_fitting_plot.axes.set_xlabel("time/min")
         self.fid_series_fitting_plot.axes.set_ylabel("amplitude/V")
-        self.fid_series_fitting_plot.axes.plot(t,lV,'r.')
-        self.fid_series_fitting_plot.axes.plot(t,s*t+i,'b-')
+        self.fid_series_fitting_plot.axes.plot(series_timescale,series_amplitudes,'r.')
         self.fid_series_fitting_plot.draw()
+        
 
     def export_fid_series_fit(self):
         if len(self.fit_params) == 0:
@@ -358,8 +336,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         try:
             popt, pcov = curve_fit(fitting_func,self.fit_time,
-                                    self.fit_data,p0=p0,bounds=bounds,sigma=1e-3*np.ones((len(self.fit_data),)),
-                                    absolute_sigma=True, max_nfev=600)
+                                    self.fit_data,p0=p0,bounds=bounds,max_nfev=600)
         except ValueError:
             self.statusbar.showMessage('Inappropriate initial or boundary values')
             return
@@ -512,7 +489,7 @@ if __name__ == '__main__':
     server.createPV(prefix, pvdb)
     driver = flynnDriver(nmr_controller=aw)
 
-    # create pcas server thread and shut down when app exits
+    ## create pcas server thread and shut down when app exits
     server_thread = ServerThread(server)
     qApp.lastWindowClosed.connect(server_thread.stop)
 
