@@ -154,6 +154,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
     def fit_fid_series(self):
         series_amplitudes=[]
         series_timescale=[]
+        self.fit_error = []
+        self.fit_params = []
         self.i = 0
         while self.i < self.afid_n_series_spin_2.value():
 
