@@ -24,3 +24,11 @@ When flipping 3He polarisation using the adiabatic fast passage signal, use the 
 - Keep the pulse amplitude at 0.5V
 
 More optimal parameters are likely possible but this requires further testing. The above settings have been found to give satisfactorily negligible losses.
+
+## Compiling .ui files to .py
+
+Run the following in a python interpreter in the directory of the .ui files:
+
+```import PyQt5.uic
+PyQt5.uic.compileUiDir('.')
+```
