@@ -18,7 +18,8 @@ NMR control and FID fitting for the 3He spin filter filling station at the ISIS 
 
 Open the folder FLYNN and run
 
-```python setup.py build
+```
+python setup.py build
 ```
 
 This will require you to have the above dependencies installed. You might also need to wrangle with the many, many issues with cx_freeze - these issues can be resolved via liberal application of Google-fu. A binary is provided in this repository compiled on win64.
@@ -27,7 +28,8 @@ This will require you to have the above dependencies installed. You might also n
 
 Run the following in a python interpreter in the directory of the .ui files:
 
-```import PyQt5.uic
+```
+import PyQt5.uic
 PyQt5.uic.compileUiDir('.')
 ```
 
