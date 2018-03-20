@@ -14,16 +14,14 @@ NMR control and FID fitting for the 3He spin filter filling station at the ISIS 
 - EPICS
 - pcaspy
 
-## Minimizing AFP Losses
+## Compiling executable
 
-When flipping 3He polarisation using the adiabatic fast passage signal, use the following parameters to minimize losses:
+Open the folder FLYNN and run
 
-- First determine the Larmor frequency to a reasonable precision (~5Hz) using the NMR tab
-- Set the hi / lo frequencies of the sweep to 7.5KHz either side of the Larmor freq.
-- Set the pulse duration to 0.5s
-- Keep the pulse amplitude at 0.5V
+```python setup.py build
+```
 
-More optimal parameters are likely possible but this requires further testing. The above settings have been found to give satisfactorily negligible losses.
+This will require you to have the above dependencies installed. You might also need to wrangle with the many, many issues with cx_freeze - these issues can be resolved via liberal application of Google-fu. A binary is provided in this repository compiled on win64.
 
 ## Compiling .ui files to .py
 
@@ -32,3 +30,5 @@ Run the following in a python interpreter in the directory of the .ui files:
 ```import PyQt5.uic
 PyQt5.uic.compileUiDir('.')
 ```
+
+After altering the .ui file make sure to update the setup_override function in nmr_control.py.

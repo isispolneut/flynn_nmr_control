@@ -382,7 +382,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             self.fid_fitting_plot.axes.cla()
             self.fid_fitting_plot.axes.plot(
                 self.fit_time, exp_dec(
-                    self.fit_time, *popt), 'b-')
+                    self.fit_time, *popt), 'b-', zorder=10)
             self.fid_fitting_plot.axes.plot(self.fit_time, self.fit_data, 'r-')
             self.fid_fitting_plot.draw()
 
