@@ -72,6 +72,14 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fit_fid_series_button.clicked.connect(self.fit_fid_series)
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
         self.plot_multiple_fid_button.clicked.connect(self.plot_multiple_fid)
+        
+        # AFP Signal
+
+        def afp_flip_wrap():
+            larmor_freq = self.larmor_freq_spin.value()
+            afp_flip(larmor_freq-10., larmor_freq+10., larmor_freq, 0.5, 1.0)
+
+        self.afp_button.clicked.connect(afp_flip_wrap)
 
         def params_dialog():
             # Brings up the parameters dialog
@@ -162,7 +170,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.fit_error.append(np.diag(fit_result[1]))
                     self.fit_params.append(fit_result[0])
                     print("Fit FID # " + str(self.i))
-                except RuntimeError:
+                except Exception:
                     # If a fit isn't found for a given FID with the supplied parameters, simply skip the file
                     # This will leave a gap but it at least won't crash the whole routine
                     # for now.
@@ -171,10 +179,36 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                     continue
             self.i += 1
 
+        t=np.array(series_timescale, dtype=np.float64)
+        V=np.array(series_amplitudes, dtype=np.float64)
+        lV=np.log(V)
+
+        s,inter,r,p,std = linregress(t,lV)
+
+        residuals = abs(lV - (s*t+inter))
+        outlier_indices = list(np.where(abs(residuals-np.mean(residuals)) > np.std(residuals))[0])
+        outlier_indices.sort()
+
+        for i in outlier_indices[::-1]:
+            t=np.delete(t,i)
+            lV=np.delete(lV,i)
+            V=np.delete(V,i)
+
+        s,inter,r,p,std = linregress(t,lV)
+
+        print((1/s)/60)
+        print((std/s) * ((1/s)/60))
+
         self.fid_series_fitting_plot.axes.cla()
         self.fid_series_fitting_plot.axes.set_xlabel("time/min")
         self.fid_series_fitting_plot.axes.set_ylabel("amplitude/V")
         self.fid_series_fitting_plot.axes.plot(series_timescale, series_amplitudes, 'r.')
+        self.fid_series_fitting_plot.axes.plot(t, np.exp(inter)*np.exp(s*t),'b-')
+
+        plt.text(1.0, 0.5, 'matplotlib', horizontalalignment='center',
+                 verticalalignment='center',
+                 transform=self.fid_series_fitting_plot.axes.transAxes)
+
         self.fid_series_fitting_plot.draw()
 
     def export_fid_series_fit(self):
@@ -302,7 +336,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             lower_bounds = lower_bounds[~np.array(is_fixed_mask)]
             upper_bounds = np.array([self.vpp_bound_upper.value() * 1e-3,
                                      self.decay_time_bound_upper.value() * 1e-3,
-                                     1,
+                                     0.001,
                                      self.frequency_bound_upper.value(),
                                      self.constant_bound_upper.value(),
                                      6.28])

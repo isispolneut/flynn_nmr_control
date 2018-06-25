@@ -14,8 +14,8 @@
    <string>NMR Control</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_9">
+    <item row="0" column="0">
      <widget class="QTabWidget" name="main_tabs">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -1353,6 +1353,36 @@
         </layout>
        </widget>
       </widget>
+      <widget class="QWidget" name="afp_tab">
+       <attribute name="title">
+        <string>AFP</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>751</width>
+          <height>461</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="0" column="0">
+          <widget class="QPushButton" name="afp_button">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Flip</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
       <widget class="QWidget" name="pref_tab">
        <attribute name="title">
         <string>Preferences</string>
@@ -1363,10 +1393,17 @@
           <x>10</x>
           <y>10</y>
           <width>241</width>
-          <height>74</height>
+          <height>100</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
+         <item row="1" column="0">
+          <widget class="QLabel" name="input_terminal_label">
+           <property name="text">
+            <string>NMR Coil Input</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="1">
           <widget class="QComboBox" name="output_terminal_combo">
            <item>
@@ -1418,13 +1455,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="input_terminal_label">
-           <property name="text">
-            <string>NMR Coil Input</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
           <widget class="QComboBox" name="input_terminal_combo">
            <item>
@@ -1458,6 +1488,26 @@
              <string>Dev1/ao0</string>
             </property>
            </item>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="larmor_label">
+           <property name="text">
+            <string>Larmor Frequency</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox">
+           <property name="suffix">
+            <string> kHz</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="value">
+            <double>37.000000000000000</double>
+           </property>
           </widget>
          </item>
         </layout>
