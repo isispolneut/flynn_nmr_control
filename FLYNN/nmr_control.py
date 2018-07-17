@@ -77,7 +77,10 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         def afp_flip_wrap():
             larmor_freq = self.larmor_freq_spin.value()
-            afp_flip(larmor_freq-10., larmor_freq+10., larmor_freq, 0.5, 1.0)
+            ramprange = self.ramp_range_spin.value()
+            rampperiod = self.afp_period_spin.value()
+            rampamp = self.afp_amplitude_spin.value()
+            afp_flip(larmor_freq-ramprange, larmor_freq+ramprange, larmor_freq, rampperiod, rampamp)
 
         self.afp_button.clicked.connect(afp_flip_wrap)
 
@@ -90,6 +93,32 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.MAX_RATE = 1000000
         self.state = 1
+
+        def link_spin_values(spin1, spin2):
+            # We have to block signals when we update the spin values
+            # to stop an endlessly circling loop of each spin updating the other
+            # then wrap the silent updates and link them to the correct signals
+
+            def update_silent(spin, value):
+                spin.blockSignals(True)
+                spin.setValue(value)
+                spin.blockSignals(False)
+
+            def spin1_update():
+                update_silent(spin1, spin2.value())
+            
+            def spin2_update():
+                update_silent(spin2, spin1.value())
+
+            spin2.valueChanged.connect(spin1_update)
+            spin1.valueChanged.connect(spin2_update)
+
+        link_spin_values(self.pulse_frequency_spin, self.apulse_frequency_spin)
+        link_spin_values(self.pulse_duration_spin, self.apulse_duration_spin)
+        link_spin_values(self.pulse_amplitude_spin, self.apulse_amplitude_spin)
+        link_spin_values(self.pulse_density_spin, self.apulse_density_spin)
+        link_spin_values(self.return_pulse_duration_spin, self.areturn_pulse_duration_spin)
+
 
     def set_fid_dir(self):
         """Sets the directory from which to read and write FID series"""
@@ -196,8 +225,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         s,inter,r,p,std = linregress(t,lV)
 
-        print((1/s)/60)
-        print((std/s) * ((1/s)/60))
+        lifetime = (1/s)/60
+        lifetime_err = (std/s) * ((1/s)/60)
 
         self.fid_series_fitting_plot.axes.cla()
         self.fid_series_fitting_plot.axes.set_xlabel("time/min")
@@ -205,7 +234,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_series_fitting_plot.axes.plot(series_timescale, series_amplitudes, 'r.')
         self.fid_series_fitting_plot.axes.plot(t, np.exp(inter)*np.exp(s*t),'b-')
 
-        plt.text(1.0, 0.5, 'matplotlib', horizontalalignment='center',
+        self.fid_series_fitting_plot.axes.text(0.3, 0.3, 
+                '{0:3.2f}pm{1:3.2f}'.format(lifetime, lifetime_err), horizontalalignment='center',
                  verticalalignment='center',
                  transform=self.fid_series_fitting_plot.axes.transAxes)
 
@@ -247,7 +277,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.fidOutput = QPlot(
             self.nmr_signaller_tab,
-            xlabel="Time / ms",
+            xlabel="Time / s",
             ylabel="Amplitude / mV")
         self.fidOutput.setGeometry(QtCore.QRect(10, 20, 531, 221))
         sizePolicy = QtWidgets.QSizePolicy(
@@ -262,7 +292,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_fitting_plot = QPlot(
             self.fitting_tab,
             xlabel="Time / s",
-            ylabel="Amplitude / V")
+            ylabel="Amplitude / mV")
         self.fid_fitting_plot.setGeometry(QtCore.QRect(10, 10, 741, 261))
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding,
@@ -513,8 +543,15 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         data = np.multiply(self.acq_data, larmor_wave)
         data_filtered = butter_lowpass(data, 300, 60e3, order=5)
 
-        self.acq_data, self.timescale = resample(data_filtered, int(len(
-            data_filtered) / self.decimation_factor_spin.value()), t=1e-6 * np.arange(0, len(self.acq_data)))
+        if self.decimation_factor_spin.value() % 2 == 0:
+            decimation_factor = self.decimation_factor_spin.value() + 1
+        else:
+            decimation_factor = self.decimation_factor_spin.value()
+
+        self.acq_data = savitzky_golay(data_filtered, decimation_factor, 3)
+        self.acq_data = self.acq_data[::int(decimation_factor)]
+        self.timescale = np.linspace(0, self.return_pulse_duration_spin.value() * 1e-3, num=len(self.acq_data))
+
         self.plot_return_pulse()
 
     def plot_return_pulse(self):

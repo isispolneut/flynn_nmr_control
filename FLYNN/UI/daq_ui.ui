@@ -1362,12 +1362,19 @@
          <rect>
           <x>10</x>
           <y>10</y>
-          <width>751</width>
-          <height>461</height>
+          <width>191</width>
+          <height>206</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_10">
          <item row="0" column="0">
+          <widget class="QLabel" name="larmor_freq_label">
+           <property name="text">
+            <string>Larmor Freq.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0" colspan="2">
           <widget class="QPushButton" name="afp_button">
            <property name="minimumSize">
             <size>
@@ -1377,6 +1384,73 @@
            </property>
            <property name="text">
             <string>Flip</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="ramp_range_label">
+           <property name="text">
+            <string>Ramp Range</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="ramp_range_spin">
+           <property name="suffix">
+            <string> kHz</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="afp_period_label">
+           <property name="text">
+            <string>Period</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="larmor_freq_spin">
+           <property name="suffix">
+            <string> kHz</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="value">
+            <double>37.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="afp_amplitude_label">
+           <property name="text">
+            <string>Amplitude</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="afp_period_spin">
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="value">
+            <double>0.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="afp_amplitude_spin">
+           <property name="suffix">
+            <string> V</string>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -1393,14 +1467,28 @@
           <x>10</x>
           <y>10</y>
           <width>241</width>
-          <height>100</height>
+          <height>81</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QLabel" name="output_terminal_label">
+           <property name="text">
+            <string>NMR Coil Output</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="input_terminal_label">
            <property name="text">
             <string>NMR Coil Input</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="afp_terminal_label">
+           <property name="text">
+            <string>AFP Input</string>
            </property>
           </widget>
          </item>
@@ -1448,34 +1536,6 @@
            </item>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="output_terminal_label">
-           <property name="text">
-            <string>NMR Coil Output</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="input_terminal_combo">
-           <item>
-            <property name="text">
-             <string>Dev1/ao0</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Dev1/ao1</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="afp_terminal_label">
-           <property name="text">
-            <string>AFP Input</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QComboBox" name="afp_terminal_combo">
            <item>
@@ -1490,24 +1550,18 @@
            </item>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="larmor_label">
-           <property name="text">
-            <string>Larmor Frequency</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox">
-           <property name="suffix">
-            <string> kHz</string>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="value">
-            <double>37.000000000000000</double>
-           </property>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="input_terminal_combo">
+           <item>
+            <property name="text">
+             <string>Dev1/ao0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Dev1/ao1</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
