@@ -592,7 +592,7 @@
             <item>
              <widget class="QLabel" name="decay_time_bound_label">
               <property name="text">
-               <string>t_0</string>
+               <string>t_2</string>
               </property>
              </widget>
             </item>

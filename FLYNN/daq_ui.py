@@ -693,7 +693,7 @@ class Ui_MainWindow(object):
         self.decay_time_bound_fixed.setSuffix(_translate("MainWindow", " ms"))
         self.vpp_bound_fixed.setSuffix(_translate("MainWindow", " mV"))
         self.frequency_bound_fixed.setSuffix(_translate("MainWindow", " Hz"))
-        self.decay_time_bound_label.setText(_translate("MainWindow", "t_0"))
+        self.decay_time_bound_label.setText(_translate("MainWindow", "t_2"))
         self.frequency_bound_label.setText(_translate("MainWindow", "f"))
         self.constant_bound_label.setText(_translate("MainWindow", "c"))
         self.bounds_checkbox.setText(_translate("MainWindow", "Use bounds"))

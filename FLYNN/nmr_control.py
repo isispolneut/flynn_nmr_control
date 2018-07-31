@@ -226,7 +226,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         s,inter,r,p,std = linregress(t,lV)
 
         lifetime = (1/s)/60
-        lifetime_err = (std/s) * ((1/s)/60)
+        lifetime_err = (std/s) * lifetime
 
         self.fid_series_fitting_plot.axes.cla()
         self.fid_series_fitting_plot.axes.set_xlabel("time/min")
@@ -548,7 +548,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             decimation_factor = self.decimation_factor_spin.value()
 
-        self.acq_data = savitzky_golay(data_filtered, decimation_factor, 3)
+        self.acq_data = savitzky_golay(data_filtered, decimation_factor, 1)
         self.acq_data = self.acq_data[::int(decimation_factor)]
         self.timescale = np.linspace(0, self.return_pulse_duration_spin.value() * 1e-3, num=len(self.acq_data))
 
