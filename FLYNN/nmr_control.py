@@ -135,7 +135,6 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         # go out of scope after the succesful execution of get_fid_series
         # same with i
         self.timer = QtCore.QTimer()
-        self.timer_timer = QtCore.QTimer()
 
         self.i = 0
 
@@ -157,18 +156,21 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                 '{} of {} series acquired'.format(
                     self.i, self.afid_n_series_spin.value()))
 
-        # Wrapped function to run the progress bar. Because of processing
-        # times this falls out of sync with the actual progress but I'm going
-        # to keep it around just because it shows that the program is actually
-        # working.
-        def update_progress():
-            self.fid_series_acq_progress.setValue(
-                (self.fid_series_acq_progress.value() + 1) % 100)
-
+        get_and_save()
         self.timer.timeout.connect(get_and_save)
-        self.timer_timer.timeout.connect(update_progress)
         self.timer.start(self.afid_sampling_period_spin.value() * 60 * 1e3)
-        self.timer_timer.start(self.afid_sampling_period_spin.value() * 600)
+
+        self.afid_stop_button.setEnabled(True)
+        self.afid_start_button.setEnabled(False)
+        self.afid_running_label.setText("RUNNING")
+
+    def stop_get_fid_series(self):
+        """Stops recording of FID time series"""
+
+        self.timer.stop()
+        self.afid_stop_button.setEnabled(False)
+        self.afid_start_button.setEnabled(True)
+        self.afid_running_label.setText("NOT RUNNING")
 
     def fit_fid_series(self):
         """Fits N series taken from directory specified by set_fid_dir()"""

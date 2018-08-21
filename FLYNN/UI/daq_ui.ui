@@ -1112,9 +1112,9 @@
        <widget class="QPushButton" name="afid_start_button">
         <property name="geometry">
          <rect>
-          <x>564</x>
+          <x>664</x>
           <y>450</y>
-          <width>191</width>
+          <width>91</width>
           <height>23</height>
          </rect>
         </property>
@@ -1122,17 +1122,36 @@
          <string>Start</string>
         </property>
        </widget>
-       <widget class="QProgressBar" name="fid_series_acq_progress">
+       <widget class="QLineEdit" name="afid_running_label">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>560</x>
-          <y>380</y>
+          <y>390</y>
           <width>191</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>NOT RUNNING</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="afid_stop_button">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>560</x>
+          <y>450</y>
+          <width>91</width>
           <height>23</height>
          </rect>
         </property>
-        <property name="value">
-         <number>0</number>
+        <property name="text">
+         <string>Stop</string>
         </property>
        </widget>
       </widget>
