@@ -68,6 +68,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_dir = ""
         self.fid_directory_button.clicked.connect(self.set_fid_dir)
         self.afid_start_button.clicked.connect(self.get_fid_series)
+        self.afid_stop_button.clicked.connect(self.stop_get_fid_series)
         self.fid_directory_button_2.clicked.connect(self.set_fid_dir)
         self.fit_fid_series_button.clicked.connect(self.fit_fid_series)
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
@@ -149,8 +150,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             self.export_fid(filename=self.fid_dir + '/' + str(self.i))
             self.i += 1
             if self.i >= self.afid_n_series_spin.value():
-                self.timer.stop()
-                self.timer_timer.stop()
+                self.stop_get_fid_series()
 
             self.statusbar.showMessage(
                 '{} of {} series acquired'.format(
