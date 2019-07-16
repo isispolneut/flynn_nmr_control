@@ -179,7 +179,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         series_timescale = []
         self.fit_error = []
         self.fit_params = []
-        self.i = 0
+        i = 0
 
         while self.i < self.afid_n_series_spin_2.value():
 
@@ -191,24 +191,24 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                     # Save results for plotting
                     series_amplitudes.append(fit_result[0][0])
                     series_timescale.append(
-                        self.afid_sampling_period_spin_2.value() * self.i)
+                        self.afid_sampling_period_spin_2.value() * i)
 
                     # Append time to fitting parameters
                     fit_result[0].append(
-                        self.afid_sampling_period_spin_2.value() * self.i)
+                        self.afid_sampling_period_spin_2.value() * i)
 
                     # Record fitting parameters in time series
                     self.fit_error.append(np.diag(fit_result[1]))
                     self.fit_params.append(fit_result[0])
-                    print("Fit FID # " + str(self.i))
+                    print("Fit FID # " + str(i))
                 except Exception:
                     # If a fit isn't found for a given FID with the supplied parameters, simply skip the file
                     # This will leave a gap but it at least won't crash the whole routine
                     # for now.
-                    print("Unable to fit FID #" + str(self.i))
-                    self.i += 1
+                    print("Unable to fit FID #" + str(i))
+                    i += 1
                     continue
-            self.i += 1
+            i += 1
 
         t=np.array(series_timescale, dtype=np.float64)
         V=np.array(series_amplitudes, dtype=np.float64)
