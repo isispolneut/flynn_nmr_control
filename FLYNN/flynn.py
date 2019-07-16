@@ -129,7 +129,7 @@ def send_pulse(pulse_frequency, pulse_duration,
     wrote = int32()
     read  = int32()
     data = np.zeros((int(return_pulse_duration*1e3),),dtype=np.float64)
-    pulse = np.sin(2*np.pi*np.linspace(0,1,pulse_density,endpoint=False))
+    pulse = pulse_amplitude*np.sin(2*np.pi*np.linspace(0,1,pulse_density,endpoint=False))
     analog_output.CreateAOVoltageChan(input_terminal,
                                        "",
                                        -1,1,
