@@ -196,7 +196,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.frequency_bound_initial, 3, 3, 1, 1)
         self.frequency_bound_upper = QtWidgets.QDoubleSpinBox(self.layoutWidget1)
         self.frequency_bound_upper.setMaximum(1000.0)
-        self.frequency_bound_upper.setProperty("value", 1000.0)
+        self.frequency_bound_upper.setProperty("value", 300.0)
         self.frequency_bound_upper.setObjectName("frequency_bound_upper")
         self.gridLayout_2.addWidget(self.frequency_bound_upper, 2, 3, 1, 1)
         self.constant_bound_upper = QtWidgets.QDoubleSpinBox(self.layoutWidget1)

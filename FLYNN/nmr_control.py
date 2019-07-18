@@ -181,10 +181,10 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fit_params = []
         i = 0
 
-        while self.i < self.afid_n_series_spin_2.value():
+        while i < self.afid_n_series_spin_2.value():
 
             if self.import_fid(filename=self.fid_dir + '/' +
-                               str(self.afid_file_prefix.text()) + str(self.i)):
+                               str(self.afid_file_prefix.text()) + str(i)):
                 try:
                     fit_result = self.fit_fid(plot=False)
 
@@ -562,7 +562,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         read_pulse_fft = np.fft.fft(self.acq_data)
         read_pulse_nu = np.fft.fftfreq(len(self.acq_data),
-                                       (self.MAX_RATE) * self.decimation_factor_spin.value())
+                                       (self.MAX_RATE)* self.decimation_factor_spin.value())
         read_pulse_fft_shifted = np.fft.fftshift(read_pulse_fft)
         read_pulse_nu_shifted = np.fft.fftshift(read_pulse_nu)
 
