@@ -69,7 +69,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_directory_button.clicked.connect(self.set_fid_dir)
         self.afid_start_button.clicked.connect(self.get_fid_series)
         self.afid_stop_button.clicked.connect(self.stop_get_fid_series)
-        self.fid_directory_button_2.clicked.connect(self.set_fid_dir)
+        self.fid_directory_button_2.clicked.connect(self.set_fid_dir2)
         self.fit_fid_series_button.clicked.connect(self.fit_fid_series)
         self.export_fid_series_button.clicked.connect(self.export_fid_series_fit)
         self.plot_multiple_fid_button.clicked.connect(self.plot_multiple_fid)
@@ -122,12 +122,18 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def set_fid_dir(self):
-        """Sets the directory from which to read and write FID series"""
+        """Sets the directory from which to write FID series"""
 
         fn = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.fid_directory_display.setText(fn)
-        self.fid_directory_display_2.setText(fn)
         self.fid_dir = fn
+
+    def set_fid_dir2(self):
+        """Sets the directory from which to read FID series"""
+
+        fn = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        self.fid_directory_display_2.setText(fn)
+        self.fid_dir2 = fn
 
     def get_fid_series(self):
         """Starts recording a time series of FIDs"""
@@ -183,7 +189,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         while i < self.afid_n_series_spin_2.value():
 
-            if self.import_fid(filename=self.fid_dir + '/' +
+            if self.import_fid(filename=self.fid_dir2 + '/' +
                                str(self.afid_file_prefix.text()) + str(i)):
                 try:
                     fit_result = self.fit_fid(plot=False)
@@ -212,18 +218,16 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
 
         t=np.array(series_timescale, dtype=np.float64)
         V=np.array(series_amplitudes, dtype=np.float64)
-        lV=np.log(V)
 
-        s,inter,r,p,std = linregress(t,lV)
-
-        residuals = abs(lV - (s*t+inter))
-        outlier_indices = list(np.where(abs(residuals-np.mean(residuals)) > np.std(residuals))[0])
-        outlier_indices.sort()
-
-        for i in outlier_indices[::-1]:
-            t=np.delete(t,i)
-            lV=np.delete(lV,i)
-            V=np.delete(V,i)
+        # Original outlier detection replaced by median absolute deviation from scipy.stats - GN 03/21  
+        mad = 1.4826*np.median(np.abs(V-np.median(V)))
+        mads = np.array(V-np.median(V))/mad
+        outlier_indices = np.where(mads>=3.0)[0]
+        t = np.delete(t,outlier_indices)
+        V = np.delete(V,outlier_indices)
+        lV = np.log(V)
+        print(mads)
+        print('Not using points '+str(outlier_indices))
 
         s,inter,r,p,std = linregress(t,lV)
 
@@ -233,7 +237,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_series_fitting_plot.axes.cla()
         self.fid_series_fitting_plot.axes.set_xlabel("time/min")
         self.fid_series_fitting_plot.axes.set_ylabel("amplitude/V")
-        self.fid_series_fitting_plot.axes.plot(series_timescale, series_amplitudes, 'r.')
+        self.fid_series_fitting_plot.axes.plot(t, V, 'r.')
         self.fid_series_fitting_plot.axes.plot(t, np.exp(inter)*np.exp(s*t),'b-')
 
         self.fid_series_fitting_plot.axes.text(0.3, 0.3, 
@@ -336,6 +340,9 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fid_multiple_plot.setSizePolicy(sizePolicy)
         self.fid_multiple_plot.setObjectName("fid_multiple_plot")
 
+    def dummy(self):
+        print('yay')
+
     def fit_fid(self, plot=True):
         """Fits an FID using scipy.optimize.curve_fit()"""
 
@@ -368,7 +375,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
             lower_bounds = lower_bounds[~np.array(is_fixed_mask)]
             upper_bounds = np.array([self.vpp_bound_upper.value() * 1e-3,
                                      self.decay_time_bound_upper.value() * 1e-3,
-                                     0.001,
+                                     0.1,
                                      self.frequency_bound_upper.value(),
                                      self.constant_bound_upper.value(),
                                      6.28])
@@ -518,7 +525,7 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
                         fids.append(str(i))
             self.fid_multiple_plot.axes.cla()
             for fid in fids:
-                data = list(zip(*np.loadtxt(self.fid_dir + '/' + fid)))
+                data = list(zip(*np.loadtxt(self.fid_dir2 + '/' + fid)))
                 self.fid_multiple_plot.axes.plot(data[0], np.multiply(data[1], 1e3))
             self.fid_multiple_plot.axes.set_xlabel(self.fid_multiple_plot.xlabel)
             self.fid_multiple_plot.axes.set_ylabel(self.fid_multiple_plot.ylabel)
@@ -550,7 +557,8 @@ class NMRControl(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             decimation_factor = self.decimation_factor_spin.value()
 
-        self.acq_data = savitzky_golay(data_filtered, decimation_factor, 1)
+        print(decimation_factor)
+        self.acq_data = savitzky_golay(data_filtered, 5*decimation_factor, 2)
         self.acq_data = self.acq_data[::int(decimation_factor)]
         self.timescale = np.linspace(0, self.return_pulse_duration_spin.value() * 1e-3, num=len(self.acq_data))
 
@@ -585,12 +593,12 @@ if __name__ == '__main__':
     qApp = QtWidgets.QApplication(sys.argv)
     aw = NMRControl()
 
-    prefix = 'NMR:'
+    prefix = '3HE:'
     pvdb = {
         'FID': {
             'prec': 7,
         },
-        'State': {
+        'STATE': {
             'type': 'int',
             'value': 2,
         }

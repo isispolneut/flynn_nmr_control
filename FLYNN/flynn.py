@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import butter, lfilter, freqz, decimate
 from scipy.optimize import curve_fit
 from PyDAQmx import *
+from time import time
 
 MAX_RATE = 1000000
 
@@ -49,7 +50,7 @@ def afp_pulse_form(t,wl,wh,wlarmor,l,amplitude):
     gauss = np.exp(-((w - mu)**2)/(sigma**2))
     return amplitude*gauss*np.sin(2*np.pi*w*t)
 
-def afp_flip(wl,wh,w_larmor,l,amplitude,out='Dev1/ao1',readback='Dev1/ai6'):
+def afp_flip(wl,wh,w_larmor,l,amplitude,out='Dev2/ao1',readback='Dev2/ai6'):
         t = np.linspace(0,l,num=l*MAX_RATE)
         w = t*(np.abs(wh-wl)/(l)) + wl
         pulse = afp_pulse_form(t,wl*1e3,wh*1e3,w_larmor*1e3,l,amplitude)
@@ -113,8 +114,8 @@ def afp_flip(wl,wh,w_larmor,l,amplitude,out='Dev1/ao1',readback='Dev1/ai6'):
 
 def send_pulse(pulse_frequency, pulse_duration, 
                 pulse_density, pulse_amplitude, return_pulse_duration,
-                input_terminal='Dev1/ao0', output_terminal='Dev1/ai0'):
-    # Ensure sampling rate is below the maximum rate for the current DAQ, 1MHz
+                input_terminal='Dev2/ao0', output_terminal='Dev2/ai0'):
+    # Ensure sampling rate is below the maximum rate for the current 1DAQ, 1MHz
 
     if pulse_frequency*pulse_density > 1e3:
         print('Requested sampling rate too high')
@@ -130,6 +131,7 @@ def send_pulse(pulse_frequency, pulse_duration,
     read  = int32()
     data = np.zeros((int(return_pulse_duration*1e3),),dtype=np.float64)
     pulse = pulse_amplitude*np.sin(2*np.pi*np.linspace(0,1,pulse_density,endpoint=False))
+
     analog_output.CreateAOVoltageChan(input_terminal,
                                        "",
                                        -1,1,
@@ -163,6 +165,7 @@ def send_pulse(pulse_frequency, pulse_duration,
                                     0.01)
     analog_input.StartTask()
     analog_output.StartTask()
+
     analog_input.ReadAnalogF64(-1,
                                 10.0,
                                 DAQmx_Val_GroupByChannel,
@@ -170,6 +173,7 @@ def send_pulse(pulse_frequency, pulse_duration,
                                 len(data),
                                 read,
                                 None)
+   
     analog_output.ClearTask()
     analog_input.ClearTask()
 
